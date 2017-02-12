@@ -124,6 +124,7 @@ set(ANDROID_ABI "$ENV{ANDROID_ABI}" CACHE string "Used ABI")
 set(ANDROID_GCC_VERSION "4.9" CACHE string "Used GCC version" )
 set(ANDROID_API_LEVEL "$ENV{ANDROID_API_LEVEL}" CACHE string "Android API Level")
 set(ANDROID_SDK_BUILD_TOOLS_REVISION "21.1.1" CACHE string "Android API Level")
+set(ANDROID_APK_MODE "$ENV{ANDROID_APK_MODE}")
 
 set(_HOST "${CMAKE_HOST_SYSTEM_NAME}-${CMAKE_HOST_SYSTEM_PROCESSOR}")
 string(TOLOWER "${_HOST}" _HOST)
@@ -218,7 +219,7 @@ if(DEFINED QTANDROID_EXPORTED_TARGET AND NOT TARGET ${CREATEAPK_TARGET_NAME})
         COMMAND cmake -E copy_directory "${ANDROID_APK_DIR}" "${EXPORT_DIR}"
         COMMAND cmake -E copy "$<TARGET_FILE:${QTANDROID_EXPORTED_TARGET}>" "${EXECUTABLE_DESTINATION_PATH}"
         COMMAND cmake -DINPUT_FILE="${QTANDROID_EXPORTED_TARGET}-deployment.json.in" -DOUTPUT_FILE="${QTANDROID_EXPORTED_TARGET}-deployment.json" "-DTARGET_DIR=$<TARGET_FILE_DIR:${QTANDROID_EXPORTED_TARGET}>" "-DTARGET_NAME=${QTANDROID_EXPORTED_TARGET}" "-DEXPORT_DIR=${CMAKE_INSTALL_PREFIX}" -P ${_CMAKE_ANDROID_DIR}/specifydependencies.cmake
-        COMMAND $<TARGET_FILE_DIR:Qt5::qmake>/androiddeployqt --input "${QTANDROID_EXPORTED_TARGET}-deployment.json" --output "${EXPORT_DIR}" --android-platform android-${ANDROID_API_LEVEL} --release --deployment bundled "\\$(ARGS)"
+        COMMAND $<TARGET_FILE_DIR:Qt5::qmake>/androiddeployqt --input "${QTANDROID_EXPORTED_TARGET}-deployment.json" --output "${EXPORT_DIR}" --android-platform android-${ANDROID_API_LEVEL} --${ANDROID_APK_MODE} --deployment bundled "\\$(ARGS)"
     )
 else()
     message(STATUS "You can export a target by specifying -DQTANDROID_EXPORTED_TARGET=<targetname>")

@@ -296,24 +296,31 @@ Otherwise the APK file is ${build_dir}/build/kstars_build_apk/bin/QtApp-debug.ap
 read user_response
 if [ "$user_response" = "Y" ] || [ "$user_response" = "y" ] || [ "$user_response" = "Yes" ] || [ "$user_response" = "yes" ]
 then
-	adb install -r kstars_build_apk/bin/QtApp-release-unsigned.apk	
+	if [ "$android_apk_mode" = "Release" ] || [ "$android_apk_mode" = "release" ]
+	then
+		adb install -r kstars_build_apk/bin/QtApp-release-unsigned.apk
+	else
+		adb install -r kstars_build_apk/bin/QtApp-debug.apk
+	fi
 fi
 
-echo "Would you like to sign apk? (Needed for publishing in Google Play)"
+if [ "$android_apk_mode" = "Release" ] || [ "$android_apk_mode" = "release" ]
+	echo "Would you like to sign apk? (Needed for publishing in Google Play)"
 
-read user_response
-if [ "$user_response" = "Y" ] || [ "$user_response" = "y" ] || [ "$user_response" = "Yes" ] || [ "$user_response" = "yes" ]
-then
-	echo "Do you need to create a keystore (yes/no)?"
 	read user_response
 	if [ "$user_response" = "Y" ] || [ "$user_response" = "y" ] || [ "$user_response" = "Yes" ] || [ "$user_response" = "yes" ]
 	then
-		keytool -genkey -alias ${keystore_alias} -keyalg RSA -keystore ${keystore_path} -keysize 2048
+		echo "Do you need to create a keystore (yes/no)?"
+		read user_response
+		if [ "$user_response" = "Y" ] || [ "$user_response" = "y" ] || [ "$user_response" = "Yes" ] || [ "$user_response" = "yes" ]
+		then
+			keytool -genkey -alias ${keystore_alias} -keyalg RSA -keystore ${keystore_path} -keysize 2048
+		fi
+
+		read -s -p "Enter password for keystore: " keystore_password
+
+		jarsigner -keystore ${keystore_path} -storepass "$keystore_password" ${build_dir}/build/kstars_build_apk/bin/QtApp-release-unsigned.apk ${keystore_alias}
+		rm ${build_dir}/build/kstars_build_apk/bin/kstars-signed.apk
+		zipalign 4 ${build_dir}/build/kstars_build_apk/bin/QtApp-release-unsigned.apk  ${build_dir}/build/kstars_build_apk/bin/kstars-signed.apk
 	fi
-
-read -s -p "Enter password for keystore: " keystore_password
-
-jarsigner -keystore ${keystore_path} -storepass "$keystore_password" ${build_dir}/build/kstars_build_apk/bin/QtApp-release-unsigned.apk ${keystore_alias}
-rm ${build_dir}/build/kstars_build_apk/bin/kstars-signed.apk
-zipalign 4 ${build_dir}/build/kstars_build_apk/bin/QtApp-release-unsigned.apk  ${build_dir}/build/kstars_build_apk/bin/kstars-signed.apk
 fi
